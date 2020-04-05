@@ -1,0 +1,29 @@
+image: ubuntu:latest
+
+before_script:
+  - apt-get update -y  # Updating the Ubuntu Docker instance.
+  - apt install -y python python-pip
+  - python -V  # Print out python version for debugging.
+  - apt install -y zip jq uuid-runtime
+  - pip install awscli --upgrade --user
+  - export PATH=~/.local/bin:$PATH # Required for awscli.
+  - aws --version  # Print out aws cli version for debugging.
+
+variables:
+  LAMBDA_NAME: 'hello_world_lambda'   # Replace it with the name of aws lambda function you want.
+
+stages:
+  - deploy
+
+deploy:
+  stage: deploy
+  
+  only:
+    - master   # We will run the CD only when something is going to change in master branch.
+
+  script:
+    - ./build.sh   # Build the zip file with lambda code
+    - aws lambda update-function-code --function-name ${LAMBDA_NAME} --zip-file fileb://${LAMBDA_NAME}.zip
+
+  environment:
+    name: master
